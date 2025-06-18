@@ -6,6 +6,7 @@ import {
   FlatList,
   Image,
   ImageBackground,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -29,6 +30,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     getPlates().then((data) => {
+      console.log('Platos cargados:', data);
       setPlates(data);
     });
   }, []);
@@ -51,6 +53,9 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, [plates]);
 
+
+
+
   const handleScrollEnd = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const itemWidth = screenWidth * 0.8 + 16;
@@ -60,24 +65,20 @@ export default function HomeScreen() {
   };
 
   const goToIndex = (index: number) => {
-    const itemWidth = screenWidth * 0.8 + 16;
-    flatListRef.current?.scrollToOffset({
-      offset: index * itemWidth,
-      animated: true,
-    });
+    flatListRef.current?.scrollToIndex({ index, animated: true });
     currentIndexRef.current = index;
     setActiveIndex(index);
   };
 
   return (
     <ImageBackground
-      source={require('@/assets/images/food.png')}
+  source={{ uri: 'https://res.cloudinary.com/dssczoogn/image/upload/v1750266168/food_bqj75m.png' }}
       style={{ flex: 1 }}
       blurRadius={3}
     >
-      <View style={styles.overlay}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.overlay}>
         <Image
-          source={require('@/assets/images/CopperBites_Logo.png')}
+          source={{ uri: 'https://res.cloudinary.com/dssczoogn/image/upload/v1750266161/CopperBites_Logo_g6bk2t.png' }}
           style={styles.image}
         />
         <Text style={styles.logo}>Restaurant App</Text>
@@ -173,7 +174,7 @@ export default function HomeScreen() {
             <Text style={styles.gridText}>Contact Us</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </ImageBackground>
   );
 }
@@ -190,7 +191,6 @@ const styles = StyleSheet.create({
     height: '30%',
   },
   overlay: {
-    flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
     padding: 20,
     justifyContent: 'center',
@@ -243,7 +243,6 @@ const styles = StyleSheet.create({
   gridText: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#fff',
   },
   dotsContainer: {
     flexDirection: 'row',
