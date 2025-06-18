@@ -1,29 +1,43 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Button, Card } from 'react-native-paper';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const screenHeight = Dimensions.get('window').height;
+
 
   return (
     <ImageBackground
-      source={require('@/assets/images/food.png')} // Cambia a tu imagen
-      style={styles.background}
+      source={require('@/assets/images/food.png')}
+      style={{ flex: 1 }}
       blurRadius={3}
     >
-      <View style={styles.overlay}>
+      <ScrollView
+        style={{ flexGrow: 1, width: '100%' }}
+        contentContainerStyle={[
+          styles.overlay,
+          { minHeight: screenHeight, width: '100%' }
+        ]}
+      >
+
         <Image
           source={require('@/assets/images/CopperBites_Logo.png')}
           style={styles.image}
         />
         <Text style={styles.logo}>Restaurant App</Text>
 
-        <Card style={{ width: '100%', marginBottom: 30 }}>
-          <Card.Cover source={require('@/assets/images/food.png')} />
+        <Card style={{ width: '100%', marginBottom: 30, borderRadius: 12 }} mode="elevated">
+          <Card.Cover
+            source={require('@/assets/images/food.png')}
+            style={{ borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+          />
           <Card.Title title="Plato del Día" subtitle="Sopa Thai con Camarones" />
           <Card.Actions>
-            <Button onPress={() => router.push('/menu')}>Ver más</Button>
+            <Button mode="contained" onPress={() => router.push('/menu')}>
+              Ver más
+            </Button>
           </Card.Actions>
         </Card>
 
@@ -44,8 +58,9 @@ export default function HomeScreen() {
             <Text style={styles.gridText}>Contact Us</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </ImageBackground>
+
   );
 }
 
@@ -59,7 +74,6 @@ const styles = StyleSheet.create({
     height: '30%',
   },
   overlay: {
-    flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
     padding: 20,
     justifyContent: 'center',
@@ -93,19 +107,25 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     width: '100%',
+    gap: 10,
   },
+
   gridItem: {
-    backgroundColor: '#fff',
-    width: '40%',
-    height: 100,
-    marginVertical: 10,
+    backgroundColor: '#1e1e1e',
+    flexBasis: '48%',
+    aspectRatio: 1,
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
+
   gridText: {
     fontWeight: 'bold',
     fontSize: 16,
