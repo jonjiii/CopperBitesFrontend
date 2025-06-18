@@ -1,12 +1,73 @@
+import { getPlates } from '@/services/plate_service';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Dimensions, Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Button, Card } from 'react-native-paper';
+
+interface Plate {
+  name: string;
+  description: string;
+  image: string;
+}
 
 export default function HomeScreen() {
   const router = useRouter();
-  const screenHeight = Dimensions.get('window').height;
+  const screenWidth = Dimensions.get('window').width;
+  const [plates, setPlates] = useState<Plate[]>([]);
+  const flatListRef = useRef<FlatList>(null);
+  const currentIndexRef = useRef(0);
+  const [activeIndex, setActiveIndex] = useState(0);
 
+  useEffect(() => {
+    getPlates().then((data) => {
+      setPlates(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (plates.length === 0) return;
+
+    const itemWidth = screenWidth * 0.8 + 16;
+
+    const interval = setInterval(() => {
+      const nextIndex = (currentIndexRef.current + 1) % plates.length;
+      flatListRef.current?.scrollToOffset({
+        offset: nextIndex * itemWidth,
+        animated: true,
+      });
+      currentIndexRef.current = nextIndex;
+      setActiveIndex(nextIndex);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [plates]);
+
+  const handleScrollEnd = (event: any) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const itemWidth = screenWidth * 0.8 + 16;
+    const index = Math.round(offsetX / itemWidth);
+    currentIndexRef.current = index;
+    setActiveIndex(index);
+  };
+
+  const goToIndex = (index: number) => {
+    const itemWidth = screenWidth * 0.8 + 16;
+    flatListRef.current?.scrollToOffset({
+      offset: index * itemWidth,
+      animated: true,
+    });
+    currentIndexRef.current = index;
+    setActiveIndex(index);
+  };
 
   return (
     <ImageBackground
@@ -14,38 +75,92 @@ export default function HomeScreen() {
       style={{ flex: 1 }}
       blurRadius={3}
     >
-      <ScrollView
-        style={{ flexGrow: 1, width: '100%' }}
-        contentContainerStyle={[
-          styles.overlay,
-          { minHeight: screenHeight, width: '100%' }
-        ]}
-      >
-
+      <View style={styles.overlay}>
         <Image
           source={require('@/assets/images/CopperBites_Logo.png')}
           style={styles.image}
         />
         <Text style={styles.logo}>Restaurant App</Text>
 
-        <Card style={{ width: '100%', marginBottom: 30, borderRadius: 12 }} mode="elevated">
-          <Card.Cover
-            source={require('@/assets/images/food.png')}
-            style={{ borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-          />
-          <Card.Title title="Plato del Día" subtitle="Sopa Thai con Camarones" />
-          <Card.Actions>
-            <Button mode="contained" onPress={() => router.push('/menu')}>
-              Ver más
-            </Button>
-          </Card.Actions>
-        </Card>
+        {plates.length > 0 && (
+          <View style={{ marginBottom: 20, alignItems: 'flex-start', width: '100%' }}>
+            <FlatList
+              ref={flatListRef}
+              data={plates}
+              keyExtractor={(_, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToAlignment="start"
+              snapToInterval={screenWidth * 0.8 + 16}
+              decelerationRate="fast"
+              onMomentumScrollEnd={handleScrollEnd}
+              contentContainerStyle={{ paddingLeft: 20, paddingBottom: 10 }}
+              getItemLayout={(_, index) => ({
+                length: screenWidth * 0.8 + 16,
+                offset: (screenWidth * 0.8 + 16) * index,
+                index,
+              })}
+              renderItem={({ item }) => (
+                <Card
+                  style={{
+                    width: screenWidth * 0.8,
+                    marginRight: 16,
+                    borderRadius: 12,
+                    backgroundColor: '#fff',
+                  }}
+                  mode="elevated"
+                >
+                  <Card.Cover
+                    source={{
+                      uri: item.image || 'https://via.placeholder.com/300x200.png?text=Sin+imagen',
+                    }}
+                    style={{
+                      borderTopLeftRadius: 12,
+                      borderTopRightRadius: 12,
+                      backgroundColor: '#ccc',
+                    }}
+                  />
+                  <Card.Title
+                    title={item.name}
+                    subtitle={item.description}
+                    titleStyle={{ color: '#000' }}
+                    subtitleStyle={{ color: '#555' }}
+                  />
+                  <Card.Actions>
+                    <Button mode="contained" onPress={() => router.push('/menu')}>
+                      Ver más
+                    </Button>
+                  </Card.Actions>
+                </Card>
+              )}
+            />
+
+            <View style={styles.dotsContainer}>
+              {plates.map((_, index) => (
+                <TouchableOpacity key={index} onPress={() => goToIndex(index)}>
+                  <View
+                    style={[
+                      styles.dot,
+                      index === activeIndex ? styles.activeDot : null,
+                    ]}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.authButton} onPress={() => router.push('/login')}>
+          <TouchableOpacity
+            style={styles.authButton}
+            onPress={() => router.push('/login')}
+          >
             <Text style={styles.authButtonText}>Login</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.authButton} onPress={() => router.push('/signup')}>
+          <TouchableOpacity
+            style={styles.authButton}
+            onPress={() => router.push('/signup')}
+          >
             <Text style={styles.authButtonText}>Register</Text>
           </TouchableOpacity>
         </View>
@@ -58,22 +173,24 @@ export default function HomeScreen() {
             <Text style={styles.gridText}>Contact Us</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </ImageBackground>
-
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-  },
   image: {
+    width: '100%',
+    aspectRatio: 1.2,
+    marginBottom: 20,
+    alignSelf: 'center',
+    borderRadius: 15,
+    borderWidth: 2,
     resizeMode: 'contain',
     height: '30%',
   },
   overlay: {
+    flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
     padding: 20,
     justifyContent: 'center',
@@ -94,7 +211,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#e74c3c',
     width: 160,
     paddingVertical: 15,
-    textAlign: 'center',
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 10,
@@ -111,7 +227,6 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 10,
   },
-
   gridItem: {
     backgroundColor: '#1e1e1e',
     flexBasis: '48%',
@@ -125,9 +240,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
-
   gridText: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: '#fff',
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 30,
+    width: '100%',
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#aaa',
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: '#fff',
+    width: 12,
+    height: 12,
   },
 });
