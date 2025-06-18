@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, Card } from 'react-native-paper';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -12,11 +13,19 @@ export default function HomeScreen() {
       blurRadius={3}
     >
       <View style={styles.overlay}>
-        <Image 
-          source={require('@/assets/images/CopperBites_Logo.png')} 
-          style={styles.image} 
+        <Image
+          source={require('@/assets/images/CopperBites_Logo.png')}
+          style={styles.image}
         />
         <Text style={styles.logo}>Restaurant App</Text>
+
+        <Card style={{ width: '100%', marginBottom: 30 }}>
+          <Card.Cover source={require('@/assets/images/food.png')} />
+          <Card.Title title="Plato del Día" subtitle="Sopa Thai con Camarones" />
+          <Card.Actions>
+            <Button onPress={() => router.push('/menu')}>Ver más</Button>
+          </Card.Actions>
+        </Card>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.authButton} onPress={() => router.push('/login')}>
